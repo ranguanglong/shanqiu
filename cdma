@@ -1,0 +1,43 @@
+1.	public static  String getAddress(Location itude) throws Exception {  
+2.	        String resultString = "";  
+3.	   
+4.	        /** 这里采用get方法，直接将参数加到URL上 */  
+5.	        String urlString = String.format("http://maps.google.cn/maps/geo?key=abcdefg&q=%s,%s", itude.getLatitude(), itude.getLongitude());  
+6.	        Log.i("URL", urlString);  
+7.	   
+8.	        /** 新建HttpClient */  
+9.	        HttpClient client = new DefaultHttpClient();  
+10.	        /** 采用GET方法 */  
+11.	        HttpGet get = new HttpGet(urlString);  
+12.	        try {  
+13.	            /** 发起GET请求并获得返回数据 */  
+14.	            HttpResponse response = client.execute(get);  
+15.	            HttpEntity entity = response.getEntity();  
+16.	            BufferedReader buffReader = new BufferedReader(new InputStreamReader(entity.getContent()));  
+17.	            StringBuffer strBuff = new StringBuffer();  
+18.	            String result = null;  
+19.	            while ((result = buffReader.readLine()) != null) {  
+20.	                strBuff.append(result);  
+21.	            }  
+22.	            resultString = strBuff.toString();  
+23.	   
+24.	            Log.e("resultAdress--->", resultString);  
+25.	              
+26.	            /** 解析JSON数据，获得物理地址 */  
+27.	            if (resultString != null && resultString.length() > 0) {  
+28.	                JSONObject jsonobject = new JSONObject(resultString);  
+29.	                JSONArray jsonArray = new JSONArray(jsonobject.get("Placemark").toString());  
+30.	                resultString = "";  
+31.	                for (int i = 0; i < jsonArray.length(); i++) {  
+32.	                    resultString = jsonArray.getJSONObject(i).getString("address");  
+33.	                }  
+34.	            }  
+35.	        } catch (Exception e) {  
+36.	            throw new Exception("获取物理位置出现错误:" + e.getMessage());  
+37.	        } finally {  
+38.	            get.abort();  
+39.	            client = null;  
+40.	        }  
+41.	   
+42.	        return resultString;  
+43.	    }  
