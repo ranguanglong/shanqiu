@@ -1,0 +1,61 @@
+#!/bin/sh
+
+
+#if [ $# -ne 2 ]
+#then
+#        echo "Usage: $0 procedure_input_file  day(number)"
+#        exit
+#fi
+
+run_dir=/home/oracle/copyfrom/scripts
+tables=$1
+#数据源配置
+dbuser=iot_app
+dbpass=Wlw_Cq07
+dbname=db7node
+#数据源表属主用户
+b_user=iot_app
+#目的数据库配置
+t_user=iot_app
+t_pass=Wlw_Cq07
+t_sid=db7node
+#max_proc
+MAX_PROC=100
+
+export cur_ymd=`date +%Y%m%d`
+
+
+################################################
+
+echo "Copy Data Begin:"`date` >${run_dir}/log/copy_data.log
+
+#init
+cd ${run_dir}
+
+cat $tables | while read string
+do
+echo $string
+    s_sql=`echo $string|awk -F^ '{print $1}'`
+    tab_name=`echo $string|awk -F^ '{print $2}'`
+    #echo $s_sql
+    #echo $tab_name
+    
+
+    sleep 2
+    prcs=`ps -ef | grep "exec_pro_ysp.sh" | grep -v grep | wc -l `
+
+    while [ $prcs -gt $MAX_PROC ]
+    do
+        echo "Copy process access $MAX_PROC,wait 30s...."
+        sleep 1
+        prcs=`ps -ef | grep "exec_pro_ysp.sh" | grep -v grep | wc -l `
+
+    done
+
+    echo ${s_sql} > ${run_dir}/sqlm/${tab_name}.sql
+
+    nohup ${run_dir}/exec_pro_ysp.sh ${run_dir}/sqlm/${tab_name}.sql  ${tab_name} ${t_user} ${t_pass} ${t_sid} ${tab_name} &
+
+echo "Copy Data End:"`date` >>${run_dir}/log/copy_data.log
+
+DONE
